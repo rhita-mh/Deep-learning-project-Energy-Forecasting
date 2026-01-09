@@ -10,6 +10,11 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 import warnings
+import time
+import subprocess
+import sys
+import shutil
+import os
 warnings.filterwarnings('ignore')
 
 # Configuration de la page
@@ -25,140 +30,155 @@ st.set_page_config(
 # ============================================================================
 st.markdown("""
 <style>
-    /* Technological theme - Dark background with neon accents */
-    .main {
-        background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
+    /* IMPORT FONTS */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+    
+    /* VARIABLES */
+    :root {
+        --primary-color: #00d4ff;
+        --secondary-color: #00ff88;
+        --accent-color: #ff6b9d;
+        --bg-dark: #0a0e27;
+        --bg-lighter: #1a1a2e;
+        --text-white: #ffffff;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
     }
     
+    /* GLOBAL RESET & TYPOGRAPHY */
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* MAIN BACKGROUND */
     .stApp {
-        background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
+        background: radial-gradient(circle at top left, #1a1a2e 0%, #0a0e27 40%, #000000 100%);
     }
     
-    /* Titre principal */
+    /* HEADERS */
+    h1, h2, h3 {
+        color: var(--text-white) !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.5px;
+    }
+    
     h1 {
-        color: #00d4ff;
-        text-align: center;
-        font-weight: bold;
-        text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff;
-        margin-bottom: 0.5rem;
-        font-size: 2.5rem;
+        color: var(--primary-color) !important;
+        background: none;
+        -webkit-text-fill-color: initial;
+        font-size: 3rem !important;
+        margin-bottom: 1.5rem !important;
+        text-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
     }
     
     h2 {
-        color: #00ff88;
-        border-bottom: 3px solid #00ff88;
+        border-bottom: 2px solid var(--glass-border);
         padding-bottom: 0.5rem;
-        margin-top: 2rem;
-        text-shadow: 0 0 5px #00ff88;
+        font-size: 1.8rem !important;
+        margin-top: 2rem !important;
     }
     
     h3 {
-        color: #ff6b9d;
-        text-shadow: 0 0 5px #ff6b9d;
+        color: var(--primary-color) !important;
+        font-size: 1.3rem !important;
+        margin-top: 1.5rem !important;
     }
     
-    /* Metrics */
-    [data-testid="stMetricValue"] {
-        color: #00d4ff;
-        font-size: 2.5rem;
-        font-weight: bold;
-        text-shadow: 0 0 10px #00d4ff;
+    /* SIDEBAR */
+    [data-testid="stSidebar"] {
+        background: rgba(10, 14, 39, 0.95);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--glass-border);
     }
     
-    [data-testid="stMetricLabel"] {
-        color: #ffffff;
-        font-size: 1.1rem;
+    /* CARDS & CONTAINERS */
+    .metric-card {
+        background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
-    [data-testid="stMetricDelta"] {
-        color: #00ff88;
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(0, 212, 255, 0.2);
+        border-color: var(--primary-color);
     }
     
-    /* Sidebar */
-    .css-1d391kg {
-        background-color: rgba(10, 14, 39, 0.95);
-        border-right: 2px solid #00d4ff;
+    /* INFO & WARNING BOXES */
+    .info-box {
+        background: rgba(0, 212, 255, 0.1);
+        border-left: 4px solid var(--primary-color);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0;
     }
     
-    .css-1lcbmhc .css-1outpf7 {
-        color: #00d4ff;
+    .warning-box {
+        background: rgba(255, 107, 157, 0.1);
+        border-left: 4px solid var(--accent-color);
+        padding: 1.5rem;
+        border-radius: 8px;
     }
     
-    /* Boutons */
+    /* CUSTOM BUTTONS */
     .stButton>button {
-        background: linear-gradient(90deg, #00d4ff 0%, #00ff88 100%);
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: #0a0e27;
-        font-weight: bold;
+        font-weight: 700;
         border: none;
-        border-radius: 10px;
-        padding: 0.5rem 2rem;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
-        width: 100%;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
-        background: linear-gradient(90deg, #00ff88 0%, #00d4ff 100%);
+        box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
     }
     
-    /* Selectbox et inputs */
-    .stSelectbox label, .stDateInput label, .stTimeInput label {
-        color: #ffffff;
-        font-weight: bold;
-        font-size: 1.1rem;
+    /* METRICS */
+    [data-testid="stMetricValue"] {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
     }
     
-    .stNumberInput label, .stTextInput label {
-        color: #ffffff;
-        font-weight: bold;
+    [data-testid="stMetricLabel"] {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
     }
     
-    /* Cards personnalisées */
-    .metric-card {
-        background: rgba(0, 212, 255, 0.1);
-        border: 2px solid #00d4ff;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-        transition: all 0.3s;
+    /* PLOTLY CHARTS */
+    .js-plotly-plot .plotly .modebar {
+        display: none !important;
     }
     
-    .metric-card:hover {
-        box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
-        transform: translateY(-5px);
+    /* RADIO BUTTONS AS NAV */
+    .stRadio [role="radiogroup"] {
+        padding: 1rem 0;
     }
     
-    /* Tables */
-    .dataframe {
-        background-color: rgba(0, 0, 0, 0.3);
-        color: #ffffff;
+    .stRadio label {
+        background: transparent;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        margin-bottom: 0.2rem;
+        transition: all 0.2s;
+        border: 1px solid transparent;
     }
     
-    /* Info boxes */
-    .info-box {
-        background: rgba(0, 255, 136, 0.1);
-        border-left: 4px solid #00ff88;
-        padding: 1rem;
-        border-radius: 5px;
-        margin: 1rem 0;
+    .stRadio label:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--glass-border);
     }
     
-    /* Warning boxes */
-    .warning-box {
-        background: rgba(255, 107, 157, 0.1);
-        border-left: 4px solid #ff6b9d;
-        padding: 1rem;
-        border-radius: 5px;
-        margin: 1rem 0;
-    }
-    
-    /* Navigation sidebar */
-    .sidebar .sidebar-content {
-        background: linear-gradient(180deg, #0a0e27 0%, #1a1a2e 100%);
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -166,11 +186,25 @@ st.markdown("""
 # FONCTIONS UTILITAIRES
 # ============================================================================
 
-@st.cache_data
 def load_data():
-    """Load historical data"""
+    """Load historical data - uses uploaded file if available, otherwise default"""
     try:
-        df = pd.read_csv('electricityConsumptionAndProductioction.csv')
+        # Check if a file was uploaded
+        if 'uploaded_file' in st.session_state and st.session_state.uploaded_file is not None:
+            # Use uploaded file - read from BytesIO
+            uploaded_file = st.session_state.uploaded_file
+            # Reset file pointer to beginning
+            uploaded_file.seek(0)
+            df = pd.read_csv(uploaded_file)
+        else:
+            # Use default file
+            df = pd.read_csv('electricityConsumptionAndProductioction.csv')
+        
+        # Ensure DateTime column exists
+        if 'DateTime' not in df.columns:
+            st.error("❌ Le fichier doit contenir une colonne 'DateTime'")
+            return None
+        
         df['DateTime'] = pd.to_datetime(df['DateTime'])
         df.set_index('DateTime', inplace=True)
         df = df.drop_duplicates()
@@ -382,6 +416,156 @@ def prepare_features_for_date(df, target_date, window_size=24):
 # ============================================================================
 # PAGES
 # ============================================================================
+
+def page_upload_dataset():
+    """Page 0: Upload Dataset"""
+    st.markdown("<h1>📤 Upload Your Dataset</h1>", unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="info-box">
+        <h3>ℹ️ Instructions</h3>
+        <p>Uploadez votre fichier CSV contenant les données de consommation électrique.</p>
+        <p><strong>Format requis :</strong></p>
+        <ul>
+            <li>Le fichier doit être au format CSV</li>
+            <li>Doit contenir une colonne <strong>'DateTime'</strong> avec les dates/heures</li>
+            <li>Doit contenir une colonne <strong>'Consumption'</strong> avec les valeurs de consommation</li>
+            <li>Les autres colonnes (Production, Wind, Solar, etc.) sont optionnelles</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # File uploader
+    uploaded_file = st.file_uploader(
+        "Choisissez un fichier CSV",
+        type=['csv'],
+        help="Sélectionnez votre fichier CSV de données"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Try to read the file to validate it
+            df_preview = pd.read_csv(uploaded_file)
+            
+            # Store in session state
+            st.session_state.uploaded_file = uploaded_file
+            
+            st.success("✅ Fichier uploadé avec succès !")
+            
+            # Display file info
+            st.markdown("<h2>📋 Informations sur le fichier</h2>", unsafe_allow_html=True)
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("📊 Nombre de lignes", f"{len(df_preview):,}")
+            with col2:
+                st.metric("📋 Nombre de colonnes", len(df_preview.columns))
+            with col3:
+                st.metric("📁 Taille du fichier", f"{uploaded_file.size / 1024:.2f} KB")
+            with col4:
+                st.metric("📝 Nom du fichier", uploaded_file.name)
+            
+            st.markdown("---")
+            
+            # Check required columns
+            st.markdown("<h3>🔍 Vérification des colonnes</h3>", unsafe_allow_html=True)
+            
+            required_cols = ['DateTime']
+            optional_cols = ['Consumption', 'Production', 'Wind', 'Solar', 'Hydroelectric', 
+                           'Biomass', 'Nuclear', 'Coal', 'Oil and Gas']
+            
+            missing_required = [col for col in required_cols if col not in df_preview.columns]
+            available_optional = [col for col in optional_cols if col in df_preview.columns]
+            
+            if missing_required:
+                st.error(f"❌ Colonnes manquantes requises : {', '.join(missing_required)}")
+            else:
+                st.success("✅ Toutes les colonnes requises sont présentes")
+            
+            if available_optional:
+                st.info(f"ℹ️ Colonnes optionnelles trouvées : {', '.join(available_optional)}")
+            
+            # Display column info
+            st.markdown("<h3>📄 Colonnes du fichier</h3>", unsafe_allow_html=True)
+            col_info = pd.DataFrame({
+                'Colonne': df_preview.columns,
+                'Type': df_preview.dtypes.astype(str),
+                'Valeurs non-nulles': df_preview.count().values,
+                'Valeurs nulles': df_preview.isnull().sum().values
+            })
+            st.dataframe(col_info, width='stretch', use_container_width=True)
+            
+            st.markdown("---")
+            
+            # Preview data
+            st.markdown("<h3>👀 Aperçu des données</h3>", unsafe_allow_html=True)
+            
+            tab1, tab2 = st.tabs(["📄 Premières lignes", "📄 Dernières lignes"])
+            
+            with tab1:
+                st.dataframe(df_preview.head(10), width='stretch', use_container_width=True)
+            
+            with tab2:
+                st.dataframe(df_preview.tail(10), width='stretch', use_container_width=True)
+            
+            # Try to parse DateTime if it exists
+            if 'DateTime' in df_preview.columns:
+                try:
+                    df_preview['DateTime'] = pd.to_datetime(df_preview['DateTime'])
+                    st.markdown(f"""
+                    <div class="info-box">
+                        <h4>📅 Période des données</h4>
+                        <p><strong>Date de début :</strong> {df_preview['DateTime'].min()}</p>
+                        <p><strong>Date de fin :</strong> {df_preview['DateTime'].max()}</p>
+                        <p><strong>Durée :</strong> {(df_preview['DateTime'].max() - df_preview['DateTime'].min()).days} jours</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.warning(f"⚠️ Impossible de parser la colonne DateTime : {str(e)}")
+            
+            st.markdown("---")
+            
+            # Navigation hint
+            st.markdown("""
+            <div class="info-box">
+                <h4>✅ Prêt à continuer !</h4>
+                <p>Votre fichier a été chargé avec succès. Vous pouvez maintenant naviguer vers les autres pages pour :</p>
+                <ul>
+                    <li>📊 Voir un aperçu des données</li>
+                    <li>📈 Analyser les données</li>
+                    <li>🎯 Voir les performances des modèles</li>
+                    <li>🔮 Faire des prédictions</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        except Exception as e:
+            st.error(f"❌ Erreur lors de la lecture du fichier : {str(e)}")
+            st.session_state.uploaded_file = None
+    else:
+        # No file uploaded - show default file info
+        st.info("ℹ️ Aucun fichier uploadé. Le fichier par défaut sera utilisé.")
+        
+        try:
+            df_default = pd.read_csv('electricityConsumptionAndProductioction.csv')
+            st.markdown("<h3>📁 Fichier par défaut</h3>", unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("📊 Lignes", f"{len(df_default):,}")
+            with col2:
+                st.metric("📋 Colonnes", len(df_default.columns))
+            
+            st.markdown("""
+            <div class="warning-box">
+                <p><strong>Note :</strong> Vous pouvez uploader votre propre fichier CSV pour utiliser vos données personnalisées.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        except:
+            st.warning("⚠️ Le fichier par défaut n'est pas disponible. Veuillez uploader un fichier CSV.")
 
 def page_data_overview():
     """Page 1: Data Overview"""
@@ -1277,8 +1461,8 @@ def page_model_comparison():
                     st.plotly_chart(fig, width='stretch')
 
 def page_realtime_prediction():
-    """Page 5: Real-Time Prediction"""
-    st.markdown("<h1>🔮 Real-Time Prediction</h1>", unsafe_allow_html=True)
+    """Page 5: Real-Time Prediction Simulation"""
+    st.markdown("<h1>🔮 Real-Time Prediction Simulation</h1>", unsafe_allow_html=True)
     
     # Load models
     with st.spinner("🔄 Loading AI models..."):
@@ -1296,247 +1480,354 @@ def page_realtime_prediction():
     params = models['params']
     scaler = models['scaler']
     
-    # Date selection
-    st.markdown("<h2>📅 Date Selection</h2>", unsafe_allow_html=True)
+    # Simulation Parameters
+    st.markdown("""
+    <div class="info-box">
+        <h3>ℹ️ Simulation Mode</h3>
+        <p>This mode simulates a real-time data feed. Select a starting point in the past, and the system will stream data point by point, making potential future predictions at each step.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Default start date: a week before the end
+        default_start = df.index[-168].date() if len(df) > 168 else df.index[0].date()
+        start_date = st.date_input(
+            "📅 Start Date",
+            value=default_start,
+            min_value=df.index[0].date(),
+            max_value=df.index[-48].date() # Ensure we have room to simulate
+        )
+    
+    with col2:
+        start_hour = st.selectbox("🕐 Start Hour", range(24), index=12)
+        
+    with col3:
+        speed = st.slider("⚡ Simulation Speed (sec/step)", 0.05, 2.0, 0.1, step=0.05)
+        
+    # Combine to timestamp
+    try:
+        from datetime import time as dt_time
+        start_timestamp = pd.Timestamp.combine(start_date, dt_time(hour=start_hour))
+        # Snap to nearest index if needed (in case of missing rows)
+        if start_timestamp not in df.index:
+             # Find closest index
+             if df.index.is_unique:
+                 idx_loc = df.index.get_indexer([start_timestamp], method='nearest')[0]
+                 start_timestamp = df.index[idx_loc]
+    except Exception as e:
+        st.error(f"Invalid Date/Time selection: {e}")
+        return
+
+    # Start Button
+    if st.button("▶️ Start Live Simulation", type="primary", use_container_width=True):
+        
+        # Container for dynamic content
+        sim_container = st.empty()
+        
+        # Get integer location of start
+        try:
+            if df.index.is_unique:
+                current_idx = df.index.get_loc(start_timestamp)
+            else:
+                 # If duplicates, take first
+                 closest = df.index.get_indexer([start_timestamp], method='nearest')[0]
+                 current_idx = closest
+        except Exception:
+             current_idx = 0
+             
+        # Best model for consistency
+        best_model_name_sim = get_best_model()
+        
+        # Simulation Loop (simulate next 48 hours)
+        steps_to_simulate = 48 
+        
+        # Create a progress bar
+        progress_bar = st.progress(0)
+        
+        for i in range(steps_to_simulate):
+            # Check bounds
+            if current_idx + i >= len(df):
+                break
+                
+            sim_time = df.index[current_idx + i]
+            actual_value = df.iloc[current_idx + i]['Consumption']
+            
+            # Prepare prediction
+            # predict_consumption uses PAST data. We need to feed it data up to (but not including) sim_time, or ending at sim_time?
+            # existing prepare_features_for_date uses:  df.iloc[target_idx - window_size:target_idx]
+            # So it uses STRICTLY PAST data to predict sim_time. Perfect.
+            
+            window_data, error = prepare_features_for_date(df, sim_time, params['window_size'])
+            
+            pred_value = 0
+            prediction_made = False
+            
+            if not error and window_data is not None:
+                # Prepare input
+                consumption_values = window_data[[params['target_col']] + params['feature_cols']].values
+                consumption_scaled = scaler.transform(consumption_values)
+                
+                if best_model_name_sim == 'LSTM (Multivariate)':
+                    input_seq = consumption_scaled
+                    pred_value = predict_consumption(models, best_model_name_sim, input_seq, univariate=False)
+                else:
+                    input_seq = consumption_scaled[:, 0]
+                    pred_value = predict_consumption(models, best_model_name_sim, input_seq, univariate=True)
+                
+                if pred_value is not None:
+                    prediction_made = True
+            
+            # UPDATE UI
+            with sim_container.container():
+                st.markdown(f"### 📡 Live Feed: {sim_time.strftime('%Y-%m-%d %H:%M')}")
+                
+                # Metrics Row
+                m1, m2, m3, m4 = st.columns(4)
+                with m1:
+                    st.metric("Current Consumption", f"{actual_value:.0f} MW")
+                with m2:
+                    if prediction_made:
+                        delta = pred_value - actual_value
+                        st.metric("AI Prediction", f"{pred_value:.0f} MW", delta=f"{delta:.0f} MW", delta_color="inverse")
+                    else:
+                        st.metric("AI Prediction", "Calculating...", delta=None)
+                with m3:
+                     # Calculate instantaneous error
+                     if prediction_made and actual_value != 0:
+                         err_pct = (abs(pred_value - actual_value) / actual_value) * 100
+                         st.metric("Error Rate", f"{err_pct:.2f}%")
+                     else:
+                         st.metric("Error Rate", "--")
+                with m4:
+                     st.metric("Model", best_model_name_sim)
+
+                # Live Chart
+                # Show last 48 hours history + current point
+                history_window = 48
+                history_start_idx = max(0, current_idx + i - history_window)
+                history_data = df.iloc[history_start_idx : current_idx + i + 1]
+                
+                fig = go.Figure()
+                
+                # Actual data line
+                fig.add_trace(go.Scatter(
+                    x=history_data.index,
+                    y=history_data['Consumption'],
+                    mode='lines',
+                    name='Actual Stream',
+                    line=dict(color='#00d4ff', width=3)
+                ))
+                
+                # Prediction point (current)
+                if prediction_made:
+                    fig.add_trace(go.Scatter(
+                        x=[sim_time],
+                        y=[pred_value],
+                        mode='markers',
+                        name='AI Prediction',
+                        marker=dict(color='#ff6b9d', size=15, symbol='star', line=dict(color='white', width=2))
+                    ))
+                
+                # Future "Ghost" line (optional, purely visual, showing next few actuals faintly) - let's skip to keep it "real time"
+                
+                fig.update_layout(
+                    title="Real-Time Data Stream",
+                    xaxis_title="Time",
+                    yaxis_title="Consumption (MW)",
+                    template="plotly_dark",
+                    height=450,
+                    margin=dict(l=20, r=20, t=50, b=20),
+                    # Ensure X axis slides
+                    xaxis=dict(
+                        range=[history_data.index[0], sim_time + timedelta(hours=4)],
+                        showgrid=True, gridcolor='rgba(255,255,255,0.1)'
+                    ),
+                    yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)'),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                
+            # Update progress
+            progress_bar.progress((i + 1) / steps_to_simulate)
+            
+            # Sleep to simulate time passing
+            time.sleep(speed)
+        
+        st.success("✅ Simulation Cycle Complete")
+
+def page_retrain_model():
+    """Page 6: Retrain Models"""
+    st.markdown("<h1>🛠️ Retrain & Update AI</h1>", unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="info-box">
+        <h3>ℹ️ Why Retrain?</h3>
+        <p>Over time, consumption patterns change (new equipment, climate change, economic shifts). 
+        To maintain accuracy, the AI models must learn from the latest data.</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        selected_date = st.date_input(
-            "Select a date:",
-            value=df.index[-1].date(),
-            min_value=df.index[0].date(),
-            max_value=df.index[-1].date()
-        )
-    
-    with col2:
-        # Find available hours for this date
-        try:
-            date_data = df[df.index.date == selected_date]
-            if len(date_data) > 0:
-                available_hours = sorted(set(date_data.index.hour.tolist()))
-                default_idx = len(available_hours) - 1 if available_hours else 0
-                selected_hour = st.selectbox(
-                    "Select an hour:",
-                    options=available_hours,
-                    index=min(default_idx, len(available_hours) - 1) if available_hours else 0
-                )
-            else:
-                selected_hour = 0
-                st.warning("⚠️ No data available for this date")
-        except Exception as e:
-            selected_hour = 0
-            st.warning(f"⚠️ Error searching for hours: {str(e)}")
-    
-    # Prepare complete date
-    try:
-        from datetime import time
-        selected_datetime = pd.Timestamp.combine(selected_date, time(hour=selected_hour))
-        
-        # Check if this date/time exists in index
-        if selected_datetime not in df.index:
-            # Find closest date/time safely
-            try:
-                # Method 1: Use get_indexer if index is unique
-                if df.index.is_unique:
-                    closest_indices = df.index.get_indexer([selected_datetime], method='nearest')
-                    if len(closest_indices) > 0 and closest_indices[0] >= 0:
-                        selected_datetime = df.index[closest_indices[0]]
-                        st.info(f"ℹ️ Using closest date/time: {selected_datetime}")
-                    else:
-                        st.error("❌ Unable to find a close date")
-                        selected_datetime = None
-                else:
-                    # Method 2: If index is not unique, find manually
-                    time_diffs = abs(df.index - selected_datetime)
-                    closest_idx = time_diffs.idxmin()
-                    selected_datetime = closest_idx
-                    st.info(f"ℹ️ Using closest date/time: {selected_datetime}")
-            except Exception as e2:
-                st.error(f"❌ Error searching for date: {str(e2)}")
-                selected_datetime = None
-    except Exception as e:
-        st.error(f"❌ Error preparing date: {str(e)}")
-        selected_datetime = None
-    
-    # Prediction button
-    if st.button("🔮 Generate Prediction", type="primary", width='stretch'):
-        if selected_datetime is None:
-            st.error("❌ Please select a valid date")
+        st.markdown("### 1. Select Data Source")
+        # Check if a custom file is uploaded
+        if 'uploaded_file' in st.session_state and st.session_state.uploaded_file is not None:
+            st.success("✅ Custom dataset loaded in memory")
+            use_custom = st.checkbox("Use uploaded dataset for training", value=True)
         else:
-            # Prepare features
-            window_data, error = prepare_features_for_date(df, selected_datetime, params['window_size'])
+            st.info("ℹ️ Using default dataset (electricityConsumptionAndProductioction.csv)")
+            use_custom = False
             
-            if error:
-                st.error(f"❌ {error}")
-            else:
-                # Get the best performing model
-                best_model_name = get_best_model()
+    with col2:
+        st.markdown("### 2. Training Configuration")
+        epochs_scale = st.slider("Training Intensity (Epochs Scale)", 0.5, 2.0, 1.0, 
+                               help="1.0 = Standard training. Lower for speed, higher for accuracy.")
+        
+    st.markdown("---")
+    
+    st.markdown("### 3. Launch Training Process")
+    
+    if st.button("🚀 Start Global Retraining", type="primary", use_container_width=True):
+        status_container = st.empty()
+        
+        try:
+            with status_container.container():
+                st.warning("⚠️ Training started. This process runs in the background and may take several minutes/hours depending on hardware.")
                 
-                # Prepare normalized data
-                consumption_values = window_data[[params['target_col']] + params['feature_cols']].values
-                consumption_scaled = scaler.transform(consumption_values)
+                # 1. Handle Data
+                if use_custom:
+                    try:
+                        # Backup existing
+                        if os.path.exists('electricityConsumptionAndProductioction.csv'):
+                            shutil.copy('electricityConsumptionAndProductioction.csv', 'electricityConsumptionAndProductioction.csv.bak')
+                            st.write("✅ Backup of old data created")
+                        
+                        # Save new file
+                        uploaded_file = st.session_state.uploaded_file
+                        uploaded_file.seek(0)
+                        with open('electricityConsumptionAndProductioction.csv', 'wb') as f:
+                            f.write(uploaded_file.getbuffer())
+                        st.write("✅ New data saved to disk")
+                    except Exception as e:
+                        st.error(f"❌ Error saving data: {str(e)}")
+                        st.stop()
                 
-                # Make prediction with best model
-                if best_model_name == 'LSTM (Multivariate)':
-                    input_seq = consumption_scaled
-                    pred_value = predict_consumption(models, best_model_name, input_seq, univariate=False)
-                else:
-                    input_seq = consumption_scaled[:, 0]
-                    pred_value = predict_consumption(models, best_model_name, input_seq, univariate=True)
+                # 2. Launch Script
+                st.write("🔄 Launching training script (train_and_save_models.py)...")
                 
-                if pred_value is None:
-                    st.error("❌ Error generating prediction")
-                else:
-                    # Display results
-                    st.markdown("<h2>📊 Prediction Results</h2>", unsafe_allow_html=True)
-                    
-                    # Get metrics for best model
-                    metrics = get_model_metrics()
-                    best_model_metrics = metrics.get(best_model_name, {})
-                    
-                    # Display metrics in 3 columns
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        st.metric(
-                            label="Prediction",
-                            value=f"{pred_value:.0f} MW",
-                            help=f"Predicted consumption using {best_model_name}"
-                        )
-                    
-                    with col2:
-                        if selected_datetime in df.index:
-                            actual_value = df.loc[selected_datetime, 'Consumption']
-                            error_val = abs(pred_value - actual_value)
-                            error_pct = (error_val / actual_value) * 100
-                            st.metric(
-                                label="Actual Value",
-                                value=f"{actual_value:.0f} MW",
-                                delta=f"{error_val:.0f} MW ({error_pct:.1f}%)"
-                            )
-                        else:
-                            st.metric(
-                                label="Actual Value",
-                                value="N/A",
-                                help="Actual value not available for future dates"
-                            )
-                    
-                    with col3:
-                        st.metric(
-                            label="Model RMSE",
-                            value=f"{best_model_metrics.get('RMSE', 0):.2f} MW",
-                            help="Root Mean Squared Error on test set"
-                        )
-                    
-                    # Display model info
-                    st.markdown(f"""
-                    <div class="info-box">
-                        <h3>🏆 Best Performing Model: {best_model_name}</h3>
-                        <p><strong>RMSE:</strong> {best_model_metrics.get('RMSE', 0):.2f} MW</p>
-                        <p><strong>MAE:</strong> {best_model_metrics.get('MAE', 0):.2f} MW</p>
-                        <p><strong>R²:</strong> {best_model_metrics.get('R2', 0):.4f}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Visualization
-                    st.markdown("<h3>📈 Prediction Visualization</h3>", unsafe_allow_html=True)
-                    
-                    fig = go.Figure()
-                    
-                    # Last 24 hours history
-                    hours_24h = [f"H-{23-i}" for i in range(24)]
-                    fig.add_trace(go.Scatter(
-                        x=hours_24h,
-                        y=window_data['Consumption'].values,
-                        mode='lines+markers',
-                        name='Actual Consumption (24h)',
-                        line=dict(color='#00ff88', width=3),
-                        marker=dict(size=6)
-                    ))
-                    
-                    # Prediction point
-                    fig.add_trace(go.Scatter(
-                        x=['H+1 (Prediction)'],
-                        y=[pred_value],
-                        mode='markers',
-                        name=f'{best_model_name}: {pred_value:.0f} MW',
-                        marker=dict(size=15, color='#00d4ff', symbol='star'),
-                        showlegend=True
-                    ))
-                    
-                    # Actual value if available
-                    if selected_datetime in df.index:
-                        actual_value = df.loc[selected_datetime, 'Consumption']
-                        fig.add_trace(go.Scatter(
-                            x=['H+1 (Actual)'],
-                            y=[actual_value],
-                            mode='markers',
-                            name=f'Actual Value: {actual_value:.0f} MW',
-                            marker=dict(size=20, color='#ffffff', symbol='x', 
-                                      line=dict(width=3, color='#ff0000')),
-                            showlegend=True
-                        ))
-                    
-                    fig.update_layout(
-                        title="Prediction vs Reality",
-                        xaxis_title="Time",
-                        yaxis_title="Consumption (MW)",
-                        template="plotly_dark",
-                        height=500,
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)'
-                    )
-                    st.plotly_chart(fig, width='stretch')
+                # We launch it as a subprocess to avoid blocking the UI forever
+                # However, for a simple demo, we might want to wait for it or stream output.
+                # Given Streamlit constraints, we will start it and ask user to check terminal.
+                
+                process = subprocess.Popen(
+                    [sys.executable, 'train_and_save_models.py'],
+                    cwd=os.getcwd(),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0 # Run invisible on windows
+                )
+                
+                st.success(f"✅ Training process started (PID: {process.pid})")
+                
+                st.markdown("""
+                <div class="warning-box">
+                    <h4>⏳ Process Running...</h4>
+                    <p>The AI is now learning from your data. Please check your terminal/console for detailed progress logs.</p>
+                    <p>Once finished, reload this page to see updated metrics.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+        except Exception as e:
+             st.error(f"❌ Failed to launch training: {str(e)}")
+
 
 # ============================================================================
 # NAVIGATION PRINCIPALE
 # ============================================================================
 
-def main():
-    # Sidebar Navigation
+def render_sidebar():
+    """Renders the sidebar and returns the selected page"""
     with st.sidebar:
         st.markdown("""
-        <div style="text-align: center; padding: 1rem;">
-            <h1 style="color: #00d4ff; margin: 0;">⚡</h1>
-            <h2 style="color: #00d4ff; margin: 0.5rem 0;">AI Energy Forecast</h2>
-            <p style="color: #888; font-size: 0.9rem;">Intelligent Dashboard</p>
+        <div style="text-align: center; padding: 2rem 1rem;">
+            <h1 style="background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3rem; margin: 0;">⚡</h1>
+            <h2 style="color: #fff; margin: 0.5rem 0; font-size: 1.5rem; border: none;">Energy Forecast System</h2>
+            <p style="color: rgba(255,255,255,0.5); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">v2.0 Dashboard</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("---")
         
-        page = st.radio(
-            "📑 Navigation",
-            [
-                "📊 Data Overview",
-                "📈 Data Analysis (EDA)",
-                "🎯 Model Performance",
-                "⚖️ Model Comparison",
-                "🔮 Real-Time Prediction"
-            ],
-            label_visibility="collapsed"
+        pages = [
+            "📤 Upload Dataset",
+            "📊 Data Overview",
+            "📈 Data Analysis (EDA)",
+            "🎯 Model Performance",
+            "⚖️ Model Comparison",
+            "🔮 Real-Time Prediction",
+            "🛠️ Retrain AI"
+        ]
+        
+        # Get current page index
+        if 'page' not in st.session_state or st.session_state.page not in pages:
+            st.session_state.page = "📤 Upload Dataset"
+            current_index = 0
+        else:
+            current_index = pages.index(st.session_state.page)
+        
+        selected_page = st.radio(
+            "NAVIGATION",
+            pages,
+            index=current_index,
+            key="navigation_radio"
         )
         
+        # Footer
         st.markdown("---")
+        if st.button("🔄 Reset / Home", use_container_width=True):
+            st.session_state.page = "📤 Upload Dataset"
+            st.rerun()
+            
         st.markdown("""
-        <div style="text-align: center; color: #888; font-size: 0.8rem; padding: 1rem;">
-            <p>Powered by Deep Learning</p>
-            <p>TensorFlow & Streamlit</p>
+        <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.7rem;">
+            <p>v2.0 • Ultra-Modern UI</p>
         </div>
         """, unsafe_allow_html=True)
+        
+        return selected_page
+
+def main():
+    # Initialize session state for page navigation
+    if 'page' not in st.session_state:
+        st.session_state.page = "📤 Upload Dataset"
+    
+    # Render Sidebar and get selection
+    selected_page = render_sidebar()
+    st.session_state.page = selected_page
     
     # Route to selected page
-    if page == "📊 Data Overview":
+    current_page = st.session_state.get('page', "📤 Upload Dataset")
+    
+    if current_page == "📤 Upload Dataset":
+        page_upload_dataset()
+    elif current_page == "📊 Data Overview":
         page_data_overview()
-    elif page == "📈 Data Analysis (EDA)":
+    elif current_page == "📈 Data Analysis (EDA)":
         page_data_analysis()
-    elif page == "🎯 Model Performance":
+    elif current_page == "🎯 Model Performance":
         page_model_performance()
-    elif page == "⚖️ Model Comparison":
+    elif current_page == "⚖️ Model Comparison":
         page_model_comparison()
-    elif page == "🔮 Real-Time Prediction":
+    elif current_page == "🔮 Real-Time Prediction":
         page_realtime_prediction()
+    elif current_page == "🛠️ Retrain AI":
+        page_retrain_model()
+    else:
+        page_upload_dataset()
 
 if __name__ == "__main__":
     main()

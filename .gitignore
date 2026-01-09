@@ -1,66 +1,38 @@
-# Modèles entraînés (trop volumineux pour GitHub)
-models/*.h5
-models/*.pkl
-models/*.pth
+# Large model files (if > 100MB, use Git LFS)
+# models/*.h5
+# models/*.pkl
 
-# Fichiers temporaires d'entraînement
+# Temporary training artifacts
 best_*.h5
-*.h5
-!models/*.h5  # Mais on ignore quand même models/
+*.tmp
+*.bak
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
 env/
 venv/
-ENV/
-tf_clean/
+.Python
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
 
-# Jupyter Notebook
+# Jupyter
 .ipynb_checkpoints
-*.ipynb_checkpoints
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
+
+# Streamlit
+.streamlit/secrets.toml
+# We keep config.toml
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Streamlit
-.streamlit/
-.streamlit/secrets.toml
-
 # Logs
 *.log
-
-# Données (optionnel - décommentez si le CSV est trop volumineux)
-# electricityConsumptionAndProductioction.csv
-
-# Fichiers système
-*.tmp
-*.bak
-*.cache
 
