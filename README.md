@@ -1,147 +1,106 @@
 # ⚡ AI Energy Forecast System
 
-Interface web moderne avec thème technologique pour la prédiction de consommation électrique en temps réel.
+## 📋 Project Overview
+This project is an advanced **Deep Learning application** designed to forecast electricity consumption in real-time. It leverages state-of-the-art neural networks to analyze historical energy data (Consumption, Production, Wind, Solar, etc.) and predict future demand.
 
-## 🚀 Fonctionnalités
+The system is built with a **Streamlit** web interface, offering a modern, futuristic dashboard for energy monitoring and AI management.
 
-- **5 Modèles de Deep Learning pré-entraînés**:
-  - Decision Tree
-  - MLP (Multi-Layer Perceptron)
-  - CNN (Convolutional Neural Network)
-  - LSTM Univariate
-  - LSTM Multivariate
+## 🚀 Key Features
 
-- **Prédiction en temps réel**: Utilise les dernières 24 heures pour prédire la consommation future
-- **Prédiction historique**: Compare les prédictions avec les valeurs réelles
-- **Interface moderne**: Thème technologique avec animations et graphiques interactifs
+### 1. 📊 Interactive Exploratory Data Analysis (EDA)
+- **Data Upload**: Support for custom CSV datasets.
+- **Visualizations**: Interactive Plotly charts for time series, distributions, and correlations.
+- **Statistical Tests**: Integrated ADF (Augmented Dickey-Fuller) test for stationarity checking.
 
-## 📋 Prérequis
+### 2. 🧠 Advanced AI Models
+The project implements and compares several machine learning and deep learning models:
+- **Baselines**: Persistent (Naïve) & ARIMA.
+- **Machine Learning**: Decision Tree Regressor.
+- **Deep Learning**:
+  - **MLP** (Multi-Layer Perceptron)
+  - **CNN** (Convolutional Neural Network)
+  - **LSTM** (Long Short-Term Memory) - Both Univariate and Multivariate.
 
-- Python 3.8 ou supérieur
-- Les dépendances listées dans `requirements.txt`
+### 3. 🔮 Real-Time Simulation
+- **Live Streaming**: Simulates a live data feed from historical records.
+- **Instant Inference**: The AI predicts the next hour's consumption in real-time.
+- **Dynamic Metrics**: Live calculation of RMSE and Absolute Error as data flows in.
 
-## 🔧 Installation
+### 4. �️ MLOps & Continuous Learning
+- **Retraining Module**: Integrated interface to re-train models on new data.
+- **Automated Pipeline**: Background process handling data preprocessing, training, and model saving without stopping the application.
 
-1. **Installer les dépendances**:
+## 💻 Tech Stack
+- **Interface**: Streamlit
+- **Deep Learning**: TensorFlow / Keras
+- **Data Processing**: Pandas, NumPy, Scikit-learn
+- **Visualization**: Plotly Express, Plotly Graph Objects
+- **Math/Stats**: Statsmodels
+
+## ⚙️ Installation & Setup
+
+### Prerequisites
+You need **Python 3.9+** installed.
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/rhita-mh/PROJET-DEEP-LEARNING.git
+cd PROJET-DEEP-LEARNING
+```
+
+### 2. Create a Virtual Environment
+It is highly recommended to use a virtual environment to avoid conflicts (like the `tf_clean` environment used during development).
+
+**Using Anaconda (Recommended):**
+```bash
+conda create -n energy-ai python=3.9
+conda activate energy-ai
+```
+
+**Using venv:**
+```bash
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Entraîner les modèles** (première fois uniquement):
-```bash
-python train_models.py
-```
-
-Cette étape va:
-- Charger et préparer les données
-- Entraîner tous les modèles
-- Sauvegarder les modèles dans le dossier `models/`
-
-**Note**: L'entraînement peut prendre plusieurs minutes selon votre machine.
-
-3. **Lancer l'application web**:
+### 4. Run the Application
 ```bash
 streamlit run app.py
 ```
 
-L'application s'ouvrira automatiquement dans votre navigateur à l'adresse `http://localhost:8501`
-
-## 📖 Utilisation
-
-### Prédiction en Temps Réel
-
-1. Sélectionnez un modèle dans la sidebar
-2. Choisissez "📈 Prédiction en temps réel"
-3. Cliquez sur "🔄 Générer Prédiction"
-4. Visualisez la prédiction avec les graphiques interactifs
-
-### Prédiction Historique
-
-1. Sélectionnez un modèle dans la sidebar
-2. Choisissez "📅 Prédiction avec données historiques"
-3. Sélectionnez une date et une heure
-4. Cliquez sur "🔮 Générer Prédiction"
-5. Comparez la prédiction avec la valeur réelle
-
-## 📁 Structure du Projet
-
+## 🏗️ Project Structure
 ```
-.
-├── app.py                              # Application Streamlit principale
-├── train_models.py                     # Script d'entraînement des modèles
-├── requirements.txt                    # Dépendances Python
-├── electricityConsumptionAndProductioction.csv  # Données
-├── project.ipynb                       # Notebook original
-└── models/                            # Dossier des modèles sauvegardés
-    ├── scaler.pkl                     # Scaler pour normalisation
-    ├── params.pkl                     # Paramètres du modèle
-    ├── decision_tree.pkl              # Modèle Decision Tree
-    ├── mlp_model.h5                   # Modèle MLP
-    ├── cnn_model.h5                   # Modèle CNN
-    ├── lstm_uni_model.h5              # Modèle LSTM Univariate
-    └── lstm_multi_model.h5            # Modèle LSTM Multivariate
+├── app.py                     # Main dashboard application
+├── train_and_save_models.py   # Training script (MLOps)
+├── requirements.txt           # Dependencies
+├── models/                    # Saved AI models & scalers
+│   ├── best_*.h5             # Tensorflow models
+│   ├── *.pkl                 # Scikit-learn models & scalers
+├── electricityConsumptionAndProductioction.csv  # Default Dataset
+└── README.md                  # Documentation
 ```
 
-## 🎨 Thème
+## 📈 Model Performance
+Based on our latest evaluation on the test set:
 
-L'interface utilise un thème technologique moderne avec:
-- Fond dégradé sombre (bleu foncé)
-- Accents néon (cyan, vert, rose)
-- Graphiques interactifs avec Plotly
-- Animations et effets visuels
+| Model | RMSE (MW) | R² Score |
+|-------|-----------|----------|
+| **LSTM (Multivariate)** | ~155.00 | 0.976 |
+| **LSTM (Univariate)** | ~165.00 | 0.972 |
+| **CNN** | ~175.00 | 0.968 |
+| **MLP** | ~180.00 | 0.965 |
+| Decision Tree | ~229.73 | 0.948 |
+| ARIMA | ~1058.76 | -0.100 |
 
-## ⚙️ Configuration
+*Note: The LSTM Multivariate model demonstrates the best ability to capture complex temporal dependencies and external factors (Wind, Solar, etc.).*
 
-Les paramètres du modèle peuvent être modifiés dans `train_models.py`:
-- `window_size`: Taille de la fenêtre temporelle (défaut: 24 heures)
-- `train_ratio`: Proportion des données d'entraînement (défaut: 0.8)
-- Architecture des modèles (couches, neurones, etc.)
-
-## 📊 Modèles Disponibles
-
-| Modèle | Type | Description |
-|--------|------|-------------|
-| Decision Tree | Machine Learning | Arbre de décision avec profondeur max 10 |
-| MLP | Deep Learning | Réseau de neurones multicouches avec régularisation |
-| CNN | Deep Learning | Réseau de neurones convolutifs 1D |
-| LSTM (Univariate) | Deep Learning | LSTM bidirectionnel avec seulement la consommation |
-| LSTM (Multivariate) | Deep Learning | LSTM bidirectionnel avec toutes les features |
-
-## 🔄 Mise à Jour des Modèles
-
-Pour ré-entraîner les modèles avec de nouvelles données:
-
-1. Remplacez le fichier CSV avec vos nouvelles données
-2. Exécutez `python train_models.py`
-3. Les nouveaux modèles seront sauvegardés automatiquement
-
-## 🐛 Dépannage
-
-**Erreur: "Impossible de charger les modèles"**
-- Assurez-vous d'avoir exécuté `train_models.py` au moins une fois
-- Vérifiez que le dossier `models/` contient tous les fichiers nécessaires
-
-**Erreur: "Module not found"**
-- Installez toutes les dépendances: `pip install -r requirements.txt`
-
-**L'application est lente**
-- L'entraînement initial prend du temps, mais les prédictions sont rapides
-- Utilisez un GPU si disponible pour accélérer l'entraînement
-
-## 📝 Notes
-
-- Les modèles sont pré-entraînés pour des performances optimales
-- La prédiction en temps réel utilise les 24 dernières heures disponibles
-- Tous les modèles utilisent la normalisation MinMax pour de meilleures performances
-
-## 👨‍💻 Développement
-
-Pour contribuer ou modifier l'application:
-- Modifiez `app.py` pour changer l'interface
-- Modifiez `train_models.py` pour ajuster les modèles
-- Le thème CSS peut être personnalisé dans `app.py`
-
-## 📄 Licence
-
-Ce projet est fourni tel quel pour usage éducatif et de démonstration.
-
+---
+*Developed by Rhita Mahraz - Deep Learning Project 2024/2025*
