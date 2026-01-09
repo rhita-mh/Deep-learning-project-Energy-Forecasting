@@ -1,4 +1,4 @@
-# ⚡ AI Energy Forecast System
+# ⚡ Energy Forecast System
 
 ## 📋 Project Overview
 This project is an advanced **Deep Learning application** designed to forecast electricity consumption in real-time. It leverages state-of-the-art neural networks to analyze historical energy data (Consumption, Production, Wind, Solar, etc.) and predict future demand.
@@ -55,15 +55,6 @@ It is highly recommended to use a virtual environment to avoid conflicts (like t
 ```bash
 conda create -n energy-ai python=3.9
 conda activate energy-ai
-```
-
-**Using venv:**
-```bash
-python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
